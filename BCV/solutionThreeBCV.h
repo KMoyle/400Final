@@ -32,5 +32,6 @@ public:
 
     void fineHLDetection( cv::Mat& image, cv::Mat& RGB, std::vector<double> rho_theta );
 
+    double confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img );
 };
 #endif //EGH400_1_2_SOLUTIONTHREEBCV_H

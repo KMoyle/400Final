@@ -20,6 +20,8 @@ BetweenClassVariance::BetweenClassVariance( cv::Mat& image, cv::Mat& RGB ) {
 
 std::vector<double> BetweenClassVariance::coarseHLDetection( cv::Mat& image ){
 
+
+
     //1.  resize img
     //    cols/M and rows/M
 //    cv::imshow("Gray",image);
@@ -118,7 +120,7 @@ std::vector<double> BetweenClassVariance::coarseHLDetection( cv::Mat& image ){
 
     if (pt1.x < 0){pt1.x = 0;}
 
-//    cv::line(image, pt1, pt2, cv::Scalar(255,255, 255 ), 1, CV_AA);
+//    cv::line(image, pt1, pt2, cv::Scalar(0,0, 255 ),4, CV_AA);
 
 //    cv::imshow( "rho line", image );
     std::vector<double> rho_theta;
@@ -132,6 +134,8 @@ std::vector<double> BetweenClassVariance::coarseHLDetection( cv::Mat& image ){
 
 
 void BetweenClassVariance::fineHLDetection( cv::Mat& image, cv::Mat& RGB, std::vector<double> rho_theta ){
+
+    cv::Mat gray_im = image.clone();
 
     double mean_sky, mean_ground = 0;
     std::vector<cv::Point2i> coarseHL(N);
@@ -184,6 +188,10 @@ void BetweenClassVariance::fineHLDetection( cv::Mat& image, cv::Mat& RGB, std::v
 //        image.at<uchar>(fineHL[j].y, fineHL[j].x) = 255;
 //    }
 
+//   double confidence =  confidenceEstimate( fineHL , gray_im );
+
+//   std::cout << "Confidence= " << confidence*100 << "%" << std::endl;
+
     cv::fitLine( fineHL, myLine, CV_DIST_HUBER, 0, 0.01, 0.01 );
 
     int x1, y1, x2, y2; //points for HL
@@ -222,4 +230,49 @@ void BetweenClassVariance::fineHLDetection( cv::Mat& image, cv::Mat& RGB, std::v
 
 
 
+}
+
+
+double BetweenClassVariance::confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img ) {
+
+    int search_radius = 15;
+    double sum_above = 0;
+    double sum_below = 0;
+    double avg_above = 0;
+    double avg_below = 0;
+    int diff_thresh = 50;
+    double count = 0;
+    double horizon_count = 0;
+
+
+    for ( int i = 1; i < points.size(); i++){
+
+        int x = points[i].x;
+        int y = points[i].y;
+
+        for ( int j = 0; j < search_radius; j++){
+
+            sum_above = sum_above + img.at<uchar>( ( y - j ) , x );
+
+            sum_below = sum_below + img.at<uchar>( ( y + j ) , x );
+        }
+
+        avg_above = sum_above/10;
+        avg_below = sum_below/10;
+
+        if ( diff_thresh < ( avg_above - avg_below )){
+
+            horizon_count+=1;
+
+        }
+        sum_above = 0;
+        sum_below = 0;
+        avg_above = 0;
+        avg_below = 0;
+        count+=1;
+
+    }
+
+
+    return  horizon_count/count;
 }

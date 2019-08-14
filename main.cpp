@@ -9,6 +9,7 @@
 #include "OTSU/solutionOneOTSU.h"
 #include "Maximise_Busyness/solutionTwoMaximiseBusyness.h"
 #include "BCV/solutionThreeBCV.h"
+#include "Dynamic_Programming/DP.h"
 
 using namespace cv;
 
@@ -17,15 +18,16 @@ int main(int argc, char** argv )
 {
     //Processing Mats
     Mat image, im_Gray;
-    int k = 19;
+    int k = 20;
 
-   auto start = std::chrono::steady_clock::now();
+   double total_time;
 
-    for (int i = 1 ; i < k; i++) {
+    for (int i = 1 ; i < k+1; i++) {
 
         std::string image_url;
 
-        image_url  =  "/home/kyle/Desktop/EGH400_1&2/datasets/PEXEL/ALL_IMAGES/resized_/img_";
+        std::string pred_url = "/home/kyle/Desktop/EGH400_1&2/datasets/PEXEL/ALL_IMAGES/Predictions/DP/play/";
+        image_url  =  "/home/kyle/Desktop/EGH400_1&2/datasets/PEXEL/ALL_IMAGES/resized_/training/img_";
          image_url = image_url + std::to_string(i) + std::string(".png");
 
         image = imread(image_url, 1);
@@ -41,7 +43,7 @@ int main(int argc, char** argv )
         /**
          * SOLUTION ONE OTSU
          */
-//        OTSU otsu( im_Gray, image, "nonlinear" );
+//        OTSU otsu( im_Gray, image, "linear" );
         /**
         * SOLUTION TWO MAXIMISE BUSYNESS
         */
@@ -50,24 +52,49 @@ int main(int argc, char** argv )
         /**
         * SOLUTION THREE BCV
         */
-        BetweenClassVariance BCV( im_Gray, image );
+//        auto start = std::chrono::steady_clock::now();
+//        BetweenClassVariance BCV( im_Gray, image );
+//        auto end = std::chrono::steady_clock::now();
+
+        HorizonLineDetector hld;
+
+        const bool is_run=true;
+        const std::string file_path_in=image_url;
+        const std::string file_path_out=pred_url + std::to_string(i) + std::string("_pred.png");
+
+        if (is_run)
+        {
+            std::string training_file="/home/kyle/Desktop/EGH400_1&2/code/Dynamic_Programming/Training/saved_model.svm";
+            std::string file_path_mask="";
+
+            cv::Mat mask;
+            if (!file_path_mask.empty())
+                mask=cv::imread(file_path_mask);
+            if (!mask.empty())
+                std::cout<<"Using mask"<<std::endl;
+            hld.set_canny_param(40);
+            hld.set_max_search_steps(10);
+            hld.init_detector(training_file);
+            hld.detect_video(image,file_path_out,mask);
+        }
+        //auto total_time+=
+//////timini
 //
-        std::string pred_url = "/home/kyle/Desktop/EGH400_1&2/datasets/PEXEL/ALL_IMAGES/Predictions/BCV/play/img_";
-        std::string mask_pred_url = pred_url + std::to_string(i) + std::string("_pred_mask.png");
-        std::string hld_pred_url = pred_url + std::to_string(i) + std::string("_pred.png");
-//        std::string mag_url = pred_url + std::to_string(i) + std::string("_mag.png");
-//        // Writing the binary mask
-        imwrite(mask_pred_url, im_Gray);
-//        // Writing the image HL
-        imwrite(hld_pred_url, image);
+//        std::string mask_pred_url = pred_url + std::to_string(i) + std::string("_pred_mask.png");
+//        std::string hld_pred_url = pred_url + std::to_string(i) + std::string("_pred.png");
+////        std::string mag_url = pred_url + std::to_string(i) + std::string("_mag.png");
+////        // Writing the binary mask
+//        imwrite(mask_pred_url, im_Gray);
+////        // Writing the image HL
+//        imwrite(hld_pred_url, image);
 
 
     }
 
-    auto end = std::chrono::steady_clock::now();
-    auto diff = end - start;
 
-    std::cout << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
+    //auto diff = end - start;
+
+//    std::cout << std::chrono::duration <double, std::milli> (diff).count() << " ms" << std::endl;
 
 //    imshow("OTSU Image", im_Gray);
 //    imshow( "BGR Image", image );

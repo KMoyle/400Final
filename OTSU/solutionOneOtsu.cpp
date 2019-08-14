@@ -19,12 +19,14 @@ OTSU::OTSU( cv::Mat& image, cv::Mat& RGB, std::string solutionType ) {
 
 void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string solutionType  ) {
 
+    cv::Mat gray_im = image.clone();
+
     cv::Mat kernal_dialtion = getStructuringElement( cv::MORPH_CROSS, cv::Size(20,20));
 
-
+//    cv::imshow("post thresh", image);
     // Otsu threshold
     cv::threshold( image, image, 0, 255, cv::THRESH_BINARY_INV | CV_THRESH_OTSU );
-//    cv::imshow("post thresh", image);
+//   cv::imshow("post thresh", image);
 
     /**
      * Flood fill ground
@@ -119,6 +121,15 @@ void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string soluti
     cv::Mat kernal = getStructuringElement(cv::MORPH_CROSS, cv::Size(5, 5));
     cv::morphologyEx(image, out_image, cv::MORPH_GRADIENT, kernal);
 
+    std::vector<cv::Point> locations;   // output, locations of non-zero pixels
+    cv::findNonZero(out_image, locations);
+    cv::Vec4f myLine;
+
+//    double confidence_param = confidenceEstimate( locations, gray_im );
+
+//    std::cout << "Confidence= " << confidence_param*100 <<"%" << std::endl;
+
+
     if ( solutionType == "nonlinear") {
 
         // For redline visualisation
@@ -132,10 +143,6 @@ void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string soluti
         // merging channels into Mat array
         cv::merge( split_im, RGB );
     } else if ( solutionType == "linear"){
-
-        std::vector<cv::Point> locations;   // output, locations of non-zero pixels
-        cv::findNonZero(out_image, locations);
-        cv::Vec4f myLine;
 
         cv::fitLine( locations, myLine, CV_DIST_L1, 0, 0.01, 0.01 );
 
@@ -178,8 +185,87 @@ void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string soluti
 }
 
 
-void OTSU::lineFitting( cv::Mat &HL, cv::Mat &img ) {
+double OTSU::confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img ) {
+    int num_pts = static_cast<int> (points.size()*0.1);
+
+    int search_radius = 15;
+    double sum_above = 0;
+    double sum_below = 0;
+    double avg_above = 0;
+    double avg_below = 0;
+    int diff_thresh = 50;
+    double count = 0;
+    double horizon_count = 0;
 
 
+    for ( int i = 1; i < points.size(); i = i + 50 ){
+
+        int x = points[i].x;
+        int y = points[i].y;
+
+        for ( int j = 0; j < search_radius; j++){
+
+            sum_above = sum_above + img.at<uchar>( ( y - j ) , x );
+
+            sum_below = sum_below + img.at<uchar>( ( y + j ) , x );
+        }
+
+        avg_above = sum_above/10;
+        avg_below = sum_below/10;
+
+        if ( diff_thresh < ( avg_above - avg_below )){
+
+            horizon_count+=1;
+
+        }
+        sum_above = 0;
+        sum_below = 0;
+        avg_above = 0;
+        avg_below = 0;
+        count+=1;
+
+    }
+
+
+    return  horizon_count/count;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

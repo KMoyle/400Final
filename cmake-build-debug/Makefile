@@ -150,6 +150,33 @@ BCV/solutionThreeBCV.cpp.s:
 	$(MAKE) -f CMakeFiles/EGH400_1_2.dir/build.make CMakeFiles/EGH400_1_2.dir/BCV/solutionThreeBCV.cpp.s
 .PHONY : BCV/solutionThreeBCV.cpp.s
 
+Dynamic_Programming/DP.o: Dynamic_Programming/DP.cpp.o
+
+.PHONY : Dynamic_Programming/DP.o
+
+# target to build an object file
+Dynamic_Programming/DP.cpp.o:
+	$(MAKE) -f CMakeFiles/EGH400_1_2.dir/build.make CMakeFiles/EGH400_1_2.dir/Dynamic_Programming/DP.cpp.o
+.PHONY : Dynamic_Programming/DP.cpp.o
+
+Dynamic_Programming/DP.i: Dynamic_Programming/DP.cpp.i
+
+.PHONY : Dynamic_Programming/DP.i
+
+# target to preprocess a source file
+Dynamic_Programming/DP.cpp.i:
+	$(MAKE) -f CMakeFiles/EGH400_1_2.dir/build.make CMakeFiles/EGH400_1_2.dir/Dynamic_Programming/DP.cpp.i
+.PHONY : Dynamic_Programming/DP.cpp.i
+
+Dynamic_Programming/DP.s: Dynamic_Programming/DP.cpp.s
+
+.PHONY : Dynamic_Programming/DP.s
+
+# target to generate assembly for a file
+Dynamic_Programming/DP.cpp.s:
+	$(MAKE) -f CMakeFiles/EGH400_1_2.dir/build.make CMakeFiles/EGH400_1_2.dir/Dynamic_Programming/DP.cpp.s
+.PHONY : Dynamic_Programming/DP.cpp.s
+
 Maximise_Busyness/solutionTwoMaximiseBusyness.o: Maximise_Busyness/solutionTwoMaximiseBusyness.cpp.o
 
 .PHONY : Maximise_Busyness/solutionTwoMaximiseBusyness.o
@@ -243,6 +270,9 @@ help:
 	@echo "... BCV/solutionThreeBCV.o"
 	@echo "... BCV/solutionThreeBCV.i"
 	@echo "... BCV/solutionThreeBCV.s"
+	@echo "... Dynamic_Programming/DP.o"
+	@echo "... Dynamic_Programming/DP.i"
+	@echo "... Dynamic_Programming/DP.s"
 	@echo "... Maximise_Busyness/solutionTwoMaximiseBusyness.o"
 	@echo "... Maximise_Busyness/solutionTwoMaximiseBusyness.i"
 	@echo "... Maximise_Busyness/solutionTwoMaximiseBusyness.s"

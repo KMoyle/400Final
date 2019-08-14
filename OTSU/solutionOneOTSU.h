@@ -26,8 +26,6 @@ public:
 
             void performOTSUThreshold( cv::Mat& image, cv::Mat &RGB, std::string solutionType  );
 
-            void filterImage( cv::Mat& img );
-
-            void lineFitting( cv::Mat &HL, cv::Mat &img );
+                double confidenceEstimate(std::vector<cv::Point> points, cv::Mat &img );
         };
 #endif //EGH400_1_2_SOLUTIONONEOTSU_H

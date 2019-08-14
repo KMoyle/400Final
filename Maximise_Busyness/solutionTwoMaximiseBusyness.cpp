@@ -58,6 +58,8 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
     float J;
 
     //Sobel
+    cv::Mat gray_im = image.clone();
+
     std::vector<cv::Point2i> P;
     std::vector<cv::Point2i> P_coarse;
     cv::Mat mag_im;
@@ -126,6 +128,9 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
 
 //    cv::imshow("Coarse HL", C_HL);
 
+    double confidence = confidenceEstimate( P_coarse , gray_im );
+
+//    std::cout << "Confidence= " << confidence*100 <<"%" << std::endl;
 
     /**
      * make mask
@@ -157,3 +162,49 @@ void MaximiseBusyness::setMagImg( cv::Mat &img ){
 
     magIMG = img;
 }
+
+double MaximiseBusyness::confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img ) {
+    int num_pts = static_cast<int> (points.size()*0.1);
+
+    int search_radius = 15;
+    double sum_above = 0;
+    double sum_below = 0;
+    double avg_above = 0;
+    double avg_below = 0;
+    int diff_thresh = 50;
+    double count = 0;
+    double horizon_count = 0;
+
+
+    for ( int i = 1; i < points.size(); i = i + 50 ){
+
+        int x = points[i].x;
+        int y = points[i].y;
+
+        for ( int j = 0; j < search_radius; j++){
+
+            sum_above = sum_above + img.at<uchar>( ( y - j ) , x );
+
+            sum_below = sum_below + img.at<uchar>( ( y + j ) , x );
+        }
+
+        avg_above = sum_above/10;
+        avg_below = sum_below/10;
+
+        if ( diff_thresh < ( avg_above - avg_below )){
+
+            horizon_count+=1;
+
+        }
+        sum_above = 0;
+        sum_below = 0;
+        avg_above = 0;
+        avg_below = 0;
+        count+=1;
+
+    }
+
+
+    return  horizon_count/count;
+}
+

@@ -94,6 +94,12 @@
 		<Unit filename="/home/kyle/Desktop/EGH400_1&amp;2/code/BCV/solutionThreeBCV.h">
 			<Option target="EGH400_1_2"/>
 		</Unit>
+		<Unit filename="/home/kyle/Desktop/EGH400_1&amp;2/code/Dynamic_Programming/DP.cpp">
+			<Option target="EGH400_1_2"/>
+		</Unit>
+		<Unit filename="/home/kyle/Desktop/EGH400_1&amp;2/code/Dynamic_Programming/DP.h">
+			<Option target="EGH400_1_2"/>
+		</Unit>
 		<Unit filename="/home/kyle/Desktop/EGH400_1&amp;2/code/Maximise_Busyness/solutionTwoMaximiseBusyness.cpp">
 			<Option target="EGH400_1_2"/>
 		</Unit>

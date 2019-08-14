@@ -39,5 +39,7 @@ public:
     void setMagImg( cv::Mat &img );
 
     cv::Mat getMagImg();
+
+    double confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img );
 };
 #endif //EGH400_1_2_SOLUTIONTWOMAXIMISEBUSYNESS_H
