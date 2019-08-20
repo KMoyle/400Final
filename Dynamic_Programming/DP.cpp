@@ -13,14 +13,14 @@
 
 HorizonLineDetector::HorizonLineDetector()
 {
-    extractor = cv::xfeatures2d::SiftDescriptorExtractor::create();
-
-
-    svm =  cv::ml::SVM::create();
-    svm->setType(cv::ml::SVM::C_SVC);
-    svm->setKernel(cv::ml::SVM::RBF);
-
-    svm->setTermCriteria(cv::TermCriteria(CV_TERMCRIT_ITER,1000,1e-6));
+//    extractor = cv::xfeatures2d::SiftDescriptorExtractor::create();
+//
+//
+//    svm =  cv::ml::SVM::create();
+//    svm->setType(cv::ml::SVM::C_SVC);
+//    svm->setKernel(cv::ml::SVM::RBF);
+//
+//    svm->setTermCriteria(cv::TermCriteria(CV_TERMCRIT_ITER,1000,1e-6));
 
     first_node = std::make_shared<Node>();
     first_node->cost=0;
@@ -167,7 +167,7 @@ bool HorizonLineDetector::compute_cheapest_path(const cv::Mat &mask)
             cost = lost_step_cost;
         }
         n->cost = cost;
-        ntree.insert(std::pair<int,std::shared_ptr<Node>>(n->cost+top,n));
+        ntree.insert(std::pair<int,std::shared_ptr<Node>>(n->cost+top+pow(i,3),n));
 
         //nlist.push_back(n);
     }
@@ -197,7 +197,9 @@ void HorizonLineDetector::compute_edges(const cv::Mat &mask)
     cv::GaussianBlur(current_frame, current_edges, cv::Size(7,7), 1.5, 1.5);
 
     cv::Canny( current_edges, current_edges, canny_param, canny_param*ratio, kernel_size );
+    //cv::Sobel( current_frame, current_edges, CV_8U, 0,1,1,2);
 
+    //current_edges = current_edges > 150;
     cv::imshow("edges", current_edges);
 
     if (!mask.empty())
@@ -212,72 +214,18 @@ void HorizonLineDetector::compute_descriptors()
 
     extractor->compute(current_frame, current_keypoints, descriptorsMat_ );
     descriptorsMat_.convertTo(descriptorsMat,CV_32F);
-}
-
-void HorizonLineDetector::compute_dp_paths()
-{
 
 }
-//bool HorizonLineDetector::train(const std::string training_list_file)
-//{
-//    int n;
-//    //Load traing mat and label mat
-//    std::fstream inpt(training_list_file.c_str(),std::fstream::in);
-//    if (!inpt.is_open())
-//        return false;
-//    inpt>>n;
-//    cv::Mat mask,mask2;
-//    canny_param=20;
-//    for (int i=0;i<n;i++)
-//    {
-//        cv::Mat temp_labels_pos,temp_labels_neg;
-//        std::string img_name, edge_name;
-//        inpt>>img_name;
-//        inpt>>edge_name;
-//
-//        //Read images
-//        current_frame = cv::imread(img_name, CV_LOAD_IMAGE_GRAYSCALE);
-//        mask  = cv::imread(edge_name,CV_LOAD_IMAGE_GRAYSCALE);
-//        mask2=255-mask;
-//        //Compute edges
-//        compute_edges(mask);
-//        compute_descriptors();
-//        //Copy the matrix of descriptors
-//        trainingDataMat.push_back(descriptorsMat);
-//        temp_labels_pos=cv::Mat::ones(descriptorsMat.rows,1,CV_32SC1);
-//        labelsMat.push_back(temp_labels_pos);
-//        //Set all as positive labels
-//        //labelsMat
-//
-//        compute_edges(mask2);
-//        compute_descriptors();
-//        //Concatenate features matrix
-//        trainingDataMat.push_back(descriptorsMat);
-//        temp_labels_neg=-cv::Mat::ones(descriptorsMat.rows,1,CV_32SC1);
-//        labelsMat.push_back(temp_labels_neg);
-//
-//    }
-//
-//    //Train SVM
-//    cv::Ptr<cv::ml::TrainData> tData = cv::ml::TrainData::create(trainingDataMat, cv::ml::SampleTypes::ROW_SAMPLE, labelsMat);
-//    svm->trainAuto(tData);
-//
-//    return true;
-//}
+
 
 bool HorizonLineDetector::init_detector(const std::string training_config_file)
 {
     return load_model(training_config_file);
 }
 
-//bool HorizonLineDetector::save_model(const std::string config_file)
-//{
-//    svm->save(config_file);
-//    return true;
-//}
+
 bool HorizonLineDetector::load_model(const std::string config_file)
 {
-    //svm->loadFromString(config_file);
 
     svm = cv::ml::SVM::load(config_file);
     return true;
@@ -294,15 +242,15 @@ void HorizonLineDetector::detect_image(const cv::Mat &frame , const cv::Mat &mas
     else
         current_frame=frame;
     compute_edges(mask);
-    compute_descriptors();
+    //compute_descriptors();
     valid_edges.resize(current_keypoints.size());
-    cv::threshold(current_edges,current_edges,1,1,CV_8U);
-    for (size_t i=0;i<valid_edges.size();i++)
-    {
-        valid_edges[i] = svm->predict(descriptorsMat.row(i))==1;
-        if (valid_edges[i])
-            current_edges.at<char>(current_keypoints[i].pt.y,current_keypoints[i].pt.x)=2;
-    }
+    //cv::threshold(current_edges,current_edges,1,1,CV_8U);
+//    for (size_t i=0;i<valid_edges.size();i++)
+//    {
+//        valid_edges[i] = svm->predict(descriptorsMat.row(i))==1;
+//        if (valid_edges[i])
+//            current_edges.at<char>(current_keypoints[i].pt.y,current_keypoints[i].pt.x)=2;
+//    }
     compute_cheapest_path(mask);
 }
 /*!
@@ -322,58 +270,72 @@ bool HorizonLineDetector::check_y_starts(const std::vector<float> &y_starts)
     return constraining_y_start;
 }
 
-bool HorizonLineDetector::detect_video(const cv::Mat &frame,const std::string video_file_out,const cv::Mat &mask_)
+bool HorizonLineDetector::detect_video(const cv::Mat &frame,const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask,const cv::Mat &mask_)
 {
     constraining_y_start=false;
     std::vector<float> y_starts; //Vector where we store the y location of the initial frames before we constraint the y start
     cv::Mat mask;
-    if (!mask_.empty())
-    {
-        if (mask_.channels()>1)
-            cvtColor(mask_, mask, CV_BGR2GRAY);
-        else
-            mask_.copyTo(mask);
+//    if (!mask_.empty())
+//    {
+//        if (mask_.channels()>1)
+//            cvtColor(mask_, mask, CV_BGR2GRAY);
+//        else
+//            mask_.copyTo(mask);
+//
+//        if (mask.type()!=CV_8U)
+//            mask.convertTo(mask,CV_8U);
+//    }
 
-        if (mask.type()!=CV_8U)
-            mask.convertTo(mask,CV_8U);
-    }
 
-    int i=0;
     int horizon_not_found=0;
 
-//        cv::Mat frame;
-//        cap >> frame; // get a new frame from camera
-        detect_image(frame,mask);
-        draw_horizon();
-        //wrt.write(current_draw);
 
-        std::cout<<i<<" "<<std::endl;
-        save_draw_frame(video_file_out);
-        if (horizon.size()>0)
-        {
-            horizon_not_found=0;
-            if (constraining_y_start)
-            {
-                y_start = horizon[horizon.size()-2].y;
-            }
-            else
-            {
-                y_starts.push_back(horizon[horizon.size()-2].y);
-                if (check_y_starts(y_starts))
-                    std::cout<<"Stable y coordinate of starting line found!"<<std::endl;
+    detect_image(frame,mask);
+    draw_horizon();
+    //wrt.write(current_draw);
+
+    //save_draw_frame(video_file_out);
+    //cv::imwrite(video_file_out_edge,current_edges);
+
+    cv::Mat output_mask = cv::Mat( current_edges.rows, current_edges.cols - 1, CV_8U, cv::Scalar(0));
+
+
+    if (horizon.size()>0)
+    {
+        std::cout<<"YASS Horizon "<<std::endl;
+        for (int i = output_mask.cols; i > 0 ; i--){
+            for (int j = 0; j < horizon[i].y  ; j++){
+                //std::cout << "j= " << j << std::endl;
+                output_mask.at<uint8_t >(j , horizon[i].x) = 255;
             }
         }
-        else
-            horizon_not_found++;
-        //Reset the y constraint if horizon is not seen in the last n frames
-        if (horizon_not_found>reset_y_constraint_condition && constraining_y_start)
-        {
-            constraining_y_start=false;
-            y_starts.clear();
-        }
-        else
-            i++;
+        cv::resize(output_mask, output_mask, cv::Size(1024,768), 0, 0, CV_INTER_LINEAR);
+        //std::cout << "confidence= " << confidenceEstimate(horizon, current_frame) << std::endl;
 
+//           horizon_not_found=0;
+//            if (constraining_y_start)
+//            {
+//                y_start = horizon[horizon.size()-2].y;
+//            }
+//            else
+//            {
+//                y_starts.push_back(horizon[horizon.size()-2].y);
+//                if (check_y_starts(y_starts))
+//                    std::cout<<"Stable y coordinate of starting line found!"<<std::endl;
+//            }
+    }
+    else
+        std::cout<<"NO Horizon "<<std::endl;
+//        //Reset the y constraint if horizon is not seen in the last n frames
+//        if (horizon_not_found>reset_y_constraint_condition && constraining_y_start)
+//        {
+//            constraining_y_start=false;
+//            y_starts.clear();
+//        }
+//        else
+//            i++;
+
+    cv::imwrite(video_file_out_mask,output_mask);
 
     //wrt.release();
     return true;
@@ -381,7 +343,7 @@ bool HorizonLineDetector::detect_video(const cv::Mat &frame,const std::string vi
 
 void HorizonLineDetector::draw_horizon()
 {
-    const cv::Scalar s1(0,255,0);
+    const cv::Scalar s1(0,0,255);
     cvtColor(current_frame,current_draw, CV_GRAY2RGB);
     for (size_t i=0;i<horizon.size();i++)
     {
@@ -423,3 +385,49 @@ void HorizonLineDetector::delete_nodes()
     ntree.clear();
 }
 
+double HorizonLineDetector::confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img ) {
+    int num_pts = static_cast<int> (points.size()*0.1);
+
+    int search_radius = 15;
+    double sum_above = 0;
+    double sum_below = 0;
+    double avg_above = 0;
+    double avg_below = 0;
+    int diff_thresh = 40;
+    double count = 0;
+    double horizon_count = 0;
+
+
+    for ( int i = 1; i < points.size(); i = i + 50 ){
+
+        int x = points[i].x;
+        int y = points[i].y;
+
+        for ( int j = 0; j < search_radius; j++){
+
+            sum_above = sum_above + img.at<uchar>( ( y - j ) , x );
+
+            sum_below = sum_below + img.at<uchar>( ( y + j ) , x );
+        }
+
+        avg_above = sum_above/10;
+        avg_below = sum_below/10;
+
+        if ( diff_thresh < ( avg_above - avg_below )){
+
+            horizon_count+=1;
+
+        }
+        sum_above = 0;
+        sum_below = 0;
+        avg_above = 0;
+        avg_below = 0;
+        count+=1;
+
+    }
+
+    //cv::imshow("conf IMage", current_frame);
+
+
+    return  horizon_count/count;
+}

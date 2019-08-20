@@ -99,8 +99,9 @@ public:
     //Detect horizon line in image
     void detect_image(const cv::Mat &frame, const cv::Mat &mask=cv::Mat());
     //Detect horizon file in video
-    bool detect_video(const cv::Mat &frame, const std::string video_file_out, const cv::Mat &mask_=cv::Mat());
+    bool detect_video(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, const cv::Mat &mask_=cv::Mat());
     void save_draw_frame(const std::string file_name="draw.jpg");
+    double confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img );
     cv::Ptr<cv::ml::SVM> svm;
 };
 #endif //EGH400_1_2_DP_H
