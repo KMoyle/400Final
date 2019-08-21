@@ -47,7 +47,7 @@ private:
     void compute_edges();
     void delete_nodes();
     //List of found edges
-    bool compute_cheapest_path(const cv::Mat &mask=cv::Mat());
+    bool compute_cheapest_path();
     bool dp(std::shared_ptr<Node> n);
     void reset_dp();
     void add_node_to_horizon(std::shared_ptr<Node> n);
@@ -71,9 +71,9 @@ public:
     int get_max_search_steps(){return max_lost_steps;}
     void set_max_search_steps(const int mss){max_lost_steps=mss;}
     //Detect horizon line in image
-    void detect_image(const cv::Mat &frame, const cv::Mat &mask=cv::Mat());
+    void detect_image(const cv::Mat &frame);
     //Detect horizon file in video
-    bool DynamicProgramming(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, const cv::Mat &mask_=cv::Mat());
+    bool DynamicProgramming(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask);
     void save_draw_frame(const std::string file_name="draw.jpg");
     double confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img );
 };

@@ -102,8 +102,9 @@ void HorizonLineDetector::add_node_to_horizon(std::shared_ptr<Node> n)
         add_node_to_horizon(n->prev);
 }
 
-bool HorizonLineDetector::compute_cheapest_path(const cv::Mat &mask)
+bool HorizonLineDetector::compute_cheapest_path()
 {
+    const cv::Mat mask;
     horizon.clear();
     visited=cv::Mat_<int>::zeros(current_edges.rows,current_edges.cols);
     visited.setTo(-1,mask);
@@ -130,14 +131,13 @@ bool HorizonLineDetector::compute_cheapest_path(const cv::Mat &mask)
 
     }
     std::map<int,std::shared_ptr<Node>>::iterator curr_node;//Iterator
-
     curr_node=ntree.begin();
-    bool found=false;
+
     //Start expanding shortest paths first
     while(curr_node!=ntree.end())
     {
-        found = dp(curr_node->second);
-        //Move to next leaft
+        dp(curr_node->second);
+        //Move to next node
         ntree.erase(curr_node);
         curr_node=ntree.begin();
     }
@@ -158,13 +158,8 @@ void HorizonLineDetector::compute_edges()
 
 }
 
-void HorizonLineDetector::detect_image(const cv::Mat &frame , const cv::Mat &mask)
-{
-    if (!mask.empty() && mask.channels()>1)
-    {
-        std::cout<<"ERROR: Input mask should be CV_8U"<<std::endl;
-        return;
-    }
+void HorizonLineDetector::detect_image(const cv::Mat &frame ){
+
     if (frame.channels()>1)
         cvtColor(frame, current_frame, CV_BGR2GRAY);
     else
@@ -173,7 +168,7 @@ void HorizonLineDetector::detect_image(const cv::Mat &frame , const cv::Mat &mas
     /// Canny Edge Detection
     compute_edges();
     /// The NUTs & BOLTs
-    compute_cheapest_path(mask);
+    compute_cheapest_path();
 }
 
 bool HorizonLineDetector::check_y_starts(const std::vector<float> &y_starts)
@@ -185,15 +180,14 @@ bool HorizonLineDetector::check_y_starts(const std::vector<float> &y_starts)
     return constraining_y_start;
 }
 
-bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask,const cv::Mat &mask_)
+bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask )
 {
-    std::vector<float> y_starts; //Vector where we store the y location of the initial frames before we constraint the y start
-    cv::Mat mask;
     int i = 0;
     int horizon_not_found=0;
+    std::vector<float> y_starts; //Vector where we store the y location of the initial frames before we constraint the y start
 
     /// Detect HL
-    detect_image(frame,mask);
+    detect_image(frame);
     /// Draw HL
     //draw_horizon();
     /// Save prediction frame

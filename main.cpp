@@ -70,10 +70,10 @@ int main(int argc, char** argv )
         std::cout << "num= " << i << std::endl;
         if (is_run)
         {
-            cv::Mat mask;
+
             hld.set_canny_param(25);
             hld.set_max_search_steps(3);
-            hld.DynamicProgramming(image,file_path_out,file_path_out_edge,file_path_out_mask,mask);
+            hld.DynamicProgramming(image,file_path_out,file_path_out_edge,file_path_out_mask);
         }
         auto end = std::chrono::steady_clock::now();
 
