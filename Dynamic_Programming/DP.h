@@ -37,23 +37,14 @@ private:
     int max_lost_steps = 10;
     int lost_step_cost = 5;//Was 5
     int max_cost = 2;
-
     bool constraining_y_start = false;
     float y_start = 0;
     float y_variation = 10;
     int reset_y_constraint_condition = 1;
-
     int canny_param = 30;
 
     //Simple edge computation
-    void compute_edges(const cv::Mat &mask=cv::Mat());
-    //Dynamic programming path solver
-    void compute_dp_paths();
-    //Compute features on edge locations
-    void compute_descriptors();
-    //Find edge locations and add them to list
-    void find_edge_list(const cv::Mat& mask=cv::Mat());
-    void reset_nodes();
+    void compute_edges();
     void delete_nodes();
     //List of found edges
     bool compute_cheapest_path(const cv::Mat &mask=cv::Mat());
@@ -61,47 +52,29 @@ private:
     void reset_dp();
     void add_node_to_horizon(std::shared_ptr<Node> n);
     bool check_y_starts(const std::vector<float> &y_starts);
-    cv::Ptr<cv::DescriptorExtractor> extractor;
-    //cv::OrbDescriptorExtractor extractor;
-    std::vector<cv::KeyPoint> current_keypoints;
     cv::Mat current_frame,current_edges, current_edges_list,current_draw;
-    cv::Mat trainingDataMat, labelsMat,descriptorsMat;
-
-
-    std::vector<bool> valid_edges;
-    bool load_model(const std::string config_file);
 
     std::shared_ptr<Node> first_node, last_node;
     cv::Mat_<int> visited;
     std::vector<cv::Point2i> horizon;
     std::multimap<int,std::shared_ptr<Node>> ntree;                       //Structure to keep track of the leafs (ordered)
-    //std::list<std::shared_ptr<Node>> nlist;
 
 public:
     HorizonLineDetector();
     ~HorizonLineDetector(){}
-    //Initialize training mode
-    bool train(const std::string training_list_file);
-    //Initialize detecting mode
-    bool init_detector(const std::string training_config_file);
-    //Save and load training
-    bool save_model(const std::string config_file);
     void set_max_lost_steps(const int max_lost){max_lost_steps=max_lost;}
     int get_max_lost_steps(){return max_lost_steps;}
     void draw_horizon();
-    void draw_edges();
     int get_cany_param(){return canny_param;}
-    //A low canny_param will detect many edges therefore the HL will take longer to compute.
-    //A high value might miss some of the edges in the image
+
     void set_canny_param(const int cp){canny_param=cp;}
     int get_max_search_steps(){return max_lost_steps;}
     void set_max_search_steps(const int mss){max_lost_steps=mss;}
     //Detect horizon line in image
     void detect_image(const cv::Mat &frame, const cv::Mat &mask=cv::Mat());
     //Detect horizon file in video
-    bool detect_video(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, const cv::Mat &mask_=cv::Mat());
+    bool DynamicProgramming(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, const cv::Mat &mask_=cv::Mat());
     void save_draw_frame(const std::string file_name="draw.jpg");
     double confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img );
-    cv::Ptr<cv::ml::SVM> svm;
 };
 #endif //EGH400_1_2_DP_H

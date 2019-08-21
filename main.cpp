@@ -58,9 +58,9 @@ int main(int argc, char** argv )
 //        auto start = std::chrono::steady_clock::now();
 //        BetweenClassVariance BCV( im_Gray, image );
 //        auto end = std::chrono::steady_clock::now();
-
-
-
+        /**
+         * SOLUTION FOUR DP
+        */
         const bool is_run=true;
         const std::string file_path_in=image_url;
         const std::string file_path_out=pred_url + std::to_string(i) + std::string("_pred.png");
@@ -70,18 +70,10 @@ int main(int argc, char** argv )
         std::cout << "num= " << i << std::endl;
         if (is_run)
         {
-            std::string training_file="/home/kyle/Desktop/EGH400_1&2/code/Dynamic_Programming/Training/saved_model.svm";
-            std::string file_path_mask="";
-
             cv::Mat mask;
-//            if (!file_path_mask.empty())
-//                mask=cv::imread(file_path_mask);
-//            if (!mask.empty())
-//                std::cout<<"Using mask"<<std::endl;
             hld.set_canny_param(25);
             hld.set_max_search_steps(3);
-            //hld.init_detector(training_file);
-            hld.detect_video(image,file_path_out,file_path_out_edge,file_path_out_mask,mask);
+            hld.DynamicProgramming(image,file_path_out,file_path_out_edge,file_path_out_mask,mask);
         }
         auto end = std::chrono::steady_clock::now();
 
