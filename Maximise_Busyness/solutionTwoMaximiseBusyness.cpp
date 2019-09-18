@@ -1,5 +1,5 @@
 //
-// Created by kyle on 11/04/19.
+// Created by kyle on 15/05/19.
 //
 
 #include "solutionTwoMaximiseBusyness.h"
@@ -32,7 +32,7 @@ std::vector<cv::Point2i> MaximiseBusyness::tempHL( int t_strong, cv::Mat &Gmag )
 //                std::cout << "t_strong=" << t_strong << std::endl;
                 P[i] = cv::Point2i(i, j);
                 break;
-                }
+            }
 
         }
 
@@ -47,8 +47,8 @@ std::vector<cv::Point2i> MaximiseBusyness::tempHL( int t_strong, cv::Mat &Gmag )
 void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
 
     int t;
-    int t_min = 2;
-    int t_max = 200;
+    int t_min = 10;
+    int t_max = 100;
     int t_increment = 2;
     float J_max = 0;
     float busyness_sky = 0;
@@ -58,15 +58,13 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
     float J;
 
     //Sobel
-    cv::Mat gray_im = image.clone();
-
     std::vector<cv::Point2i> P;
     std::vector<cv::Point2i> P_coarse;
     cv::Mat mag_im;
     cv::Sobel( image, mag_im, CV_8U, 0,2,3,2);
 //    cv::Scharr( image, mag_im, CV_8U, 0,1,1);
-//    cv::imshow( "Mag Image", mag_im );
-
+    cv::imshow( "Mag Image", mag_im );
+    cv::waitKey(0);
     setMagImg( mag_im);
     // Iterate over rows && columns saving horizon line points where threshold is max
 
@@ -100,8 +98,8 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
         J = busyness_ground - busyness_sky;
 
         if ( J > J_max ){
-             J_max = J;
-             P_coarse = P;
+            J_max = J;
+            P_coarse = P;
         }
         busyness_ground = 0;
         busyness_sky = 0;
@@ -128,9 +126,6 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
 
 //    cv::imshow("Coarse HL", C_HL);
 
-    double confidence = confidenceEstimate( P_coarse , gray_im );
-
-//    std::cout << "Confidence= " << confidence*100 <<"%" << std::endl;
 
     /**
      * make mask
@@ -162,49 +157,3 @@ void MaximiseBusyness::setMagImg( cv::Mat &img ){
 
     magIMG = img;
 }
-
-double MaximiseBusyness::confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img ) {
-    int num_pts = static_cast<int> (points.size()*0.1);
-
-    int search_radius = 15;
-    double sum_above = 0;
-    double sum_below = 0;
-    double avg_above = 0;
-    double avg_below = 0;
-    int diff_thresh = 50;
-    double count = 0;
-    double horizon_count = 0;
-
-
-    for ( int i = 1; i < points.size(); i = i + 50 ){
-
-        int x = points[i].x;
-        int y = points[i].y;
-
-        for ( int j = 0; j < search_radius; j++){
-
-            sum_above = sum_above + img.at<uchar>( ( y - j ) , x );
-
-            sum_below = sum_below + img.at<uchar>( ( y + j ) , x );
-        }
-
-        avg_above = sum_above/10;
-        avg_below = sum_below/10;
-
-        if ( diff_thresh < ( avg_above - avg_below )){
-
-            horizon_count+=1;
-
-        }
-        sum_above = 0;
-        sum_below = 0;
-        avg_above = 0;
-        avg_below = 0;
-        count+=1;
-
-    }
-
-
-    return  horizon_count/count;
-}
-

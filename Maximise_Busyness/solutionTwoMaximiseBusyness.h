@@ -1,16 +1,15 @@
 //
-// Created by kyle on 11/04/19.
+// Created by kyle on 15/05/19.
 //
 
-#ifndef EGH400_1_2_SOLUTIONTWOMAXIMISEBUSYNESS_H
-#define EGH400_1_2_SOLUTIONTWOMAXIMISEBUSYNESS_H
-
+#ifndef NEW400FINAL_SOLUTIONTWOMAXIMISEBUSYNESS_H
+#define NEW400FINAL_SOLUTIONTWOMAXIMISEBUSYNESS_H
 #include <stdlib.h>
 #include <string>
 
 #include <opencv2/opencv.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/highgui.hpp"
 
 class MaximiseBusyness
 {
@@ -39,7 +38,5 @@ public:
     void setMagImg( cv::Mat &img );
 
     cv::Mat getMagImg();
-
-    double confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img );
 };
-#endif //EGH400_1_2_SOLUTIONTWOMAXIMISEBUSYNESS_H
+#endif //NEW400FINAL_SOLUTIONTWOMAXIMISEBUSYNESS_H

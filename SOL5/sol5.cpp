@@ -1,8 +1,12 @@
 //
+// Created by kyle on 5/09/19.
+//
+
+//
 // Created by kyle on 5/08/19.
 //
 
-#include "DP.h"
+#include "sol5.h"
 #include <fstream>
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
@@ -11,19 +15,19 @@
 
 
 
-HorizonLineDetector::HorizonLineDetector()
+HorizonLineDetectorFive::HorizonLineDetectorFive()
 {
 
-    first_node = std::make_shared<Node>();
+    first_node = std::make_shared<NodeFive>();
     first_node->cost=0;
     first_node->prev=nullptr;
-    last_node = std::make_shared<Node>();
+    last_node = std::make_shared<NodeFive>();
     last_node->cost=INFINITY;
     last_node->prev=nullptr;
 }
 
 
-bool HorizonLineDetector::dp(std::shared_ptr<Node> n)
+bool HorizonLineDetectorFive::dp(std::shared_ptr<NodeFive> n, OTSU* otsu)
 {
     //Check if I've been here already and took a cheaper path (already)
     const int curr_visited=visited(n->y,n->x);
@@ -46,7 +50,7 @@ bool HorizonLineDetector::dp(std::shared_ptr<Node> n)
         //Check for neighboring pixels to see if they are edges, launch dp with all the ones that are
         for (int i=1;i<2;i++)
         {
-            for (int j=-1;j<2;j++)
+            for (int j=-2;j<3;j++)
             {
                 if (i==0 && j==0) continue;
                 if (n->x+i >= current_edges.cols || n->x+i < 0 ||
@@ -54,14 +58,15 @@ bool HorizonLineDetector::dp(std::shared_ptr<Node> n)
                 if (current_edges.at<char>(n->y+j,n->x+i) != 0)
                 {
                     good_neighbors=true;
-                    auto n1=std::make_shared<Node>(n,n->x+i,n->y+j);
+                    auto n1=std::make_shared<NodeFive>(n,n->x+i,n->y+j);
                     n1->cost= (max_cost-current_edges.at<char>(n1->y,n1->x)) + n->cost;
                     //Increase cost for lines not going straight
+//                    std::cout << "otsu cost= " << otsu->getCostOTSU( n1->x, n1->y) << std::endl;
                     if ( abs(n->y - n1->y) >= 1) {
 
-                        ntree.insert(std::pair<int,std::shared_ptr<Node> >(n1->cost*abs(n->y - n1->y)*1000,n1)); //Penalising non straight horizons
+                        ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost*abs(n->y - n1->y)*STRAIGHT_PEN + STRAIGHT_PEN*otsu->getCostOTSU(n1->x, n1->y) ,n1)); //Penalising non straight horizons
                     } else {
-                        ntree.insert(std::pair<int,std::shared_ptr<Node> >(n1->cost,n1));
+                        ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost + STRAIGHT_PEN*otsu->getCostOTSU( n1->x, n1->y),n1));
                     }
 
                 }
@@ -82,10 +87,10 @@ bool HorizonLineDetector::dp(std::shared_ptr<Node> n)
                     if (n->x+i >= current_edges.cols || n->x+i < 0 ||
                         n->y+j >= current_edges.rows || n->y+j < 0) continue;
 
-                    auto n1=std::make_shared<Node>(n,n->x+i,n->y+j);
+                    auto n1=std::make_shared<NodeFive>(n,n->x+i,n->y+j);
                     n1->lost=1+n->lost;
                     n1->cost= lost_step_cost + n->cost;
-                    ntree.insert(std::pair<int,std::shared_ptr<Node> >(n1->cost*abs(n->y - n1->y)*1000,n1));
+                    ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost*abs(n->y - n1->y)*STRAIGHT_PEN + STRAIGHT_PEN*otsu->getCostOTSU(n1->x, n1->y),n1));
                 }
             }
         }
@@ -93,7 +98,7 @@ bool HorizonLineDetector::dp(std::shared_ptr<Node> n)
     return false;
 }
 
-void HorizonLineDetector::add_node_to_horizon(std::shared_ptr<Node> n)
+void HorizonLineDetectorFive::add_node_to_horizon(std::shared_ptr<NodeFive> n)
 {
     cv::Point2i p1;
     p1.x=n->x;
@@ -103,9 +108,10 @@ void HorizonLineDetector::add_node_to_horizon(std::shared_ptr<Node> n)
         add_node_to_horizon(n->prev);
 }
 
-bool HorizonLineDetector::compute_cheapest_path()
+bool HorizonLineDetectorFive::compute_cheapest_path(OTSU* otsu)
 {
     const cv::Mat mask;
+    previous_horizon = horizon;
     horizon.clear();
     visited=cv::Mat_<int>::zeros(current_edges.rows,current_edges.cols);
     visited.setTo(-1,mask);
@@ -119,7 +125,7 @@ bool HorizonLineDetector::compute_cheapest_path()
         if (( constraining_y_start && confidence_in_estimate > 0.8) && std::abs(i-y_start)>y_variation) continue;
 
         int cost = max_cost - current_edges.at<char>(i,0);
-        auto n = std::make_shared<Node>(first_node,0,i);//(first_node,0,i);
+        auto n = std::make_shared<NodeFive>(first_node,0,i);//(first_node,0,i);
         int top = 0;
         if (cost==max_cost)
         {
@@ -128,16 +134,16 @@ bool HorizonLineDetector::compute_cheapest_path()
             cost = lost_step_cost;
         }
         n->cost = cost;
-        ntree.insert(std::pair<int,std::shared_ptr<Node>>(n->cost+top+pow(i,3),n));
+        ntree.insert(std::pair<int,std::shared_ptr<NodeFive>>(n->cost+top+pow(i,3),n));
 
     }
-    std::map<int,std::shared_ptr<Node>>::iterator curr_node;//Iterator
+    std::map<int,std::shared_ptr<NodeFive>>::iterator curr_node;//Iterator
     curr_node=ntree.begin();
 
     //Start expanding shortest paths first
     while(curr_node!=ntree.end())
     {
-        dp(curr_node->second);
+        dp(curr_node->second, otsu);
         //Move to next node
         ntree.erase(curr_node);
         curr_node=ntree.begin();
@@ -149,7 +155,7 @@ bool HorizonLineDetector::compute_cheapest_path()
     return true;
 }
 
-void HorizonLineDetector::compute_edges()
+void HorizonLineDetectorFive::compute_edges()
 {
     int ratio = 3;
     int kernel_size = 3;
@@ -162,7 +168,7 @@ void HorizonLineDetector::compute_edges()
 
 }
 
-void HorizonLineDetector::detect_image(const cv::Mat &frame){
+void HorizonLineDetectorFive::detect_image(const cv::Mat &frame, OTSU* otsu){
 
     if (frame.channels()>1)
         cv::cvtColor(frame, current_frame, cv::COLOR_BGR2GRAY);
@@ -172,10 +178,10 @@ void HorizonLineDetector::detect_image(const cv::Mat &frame){
     /// Canny Edge Detection
     compute_edges();
     /// The NUTs & BOLTs
-    compute_cheapest_path( );
+    compute_cheapest_path( otsu );
 }
 
-bool HorizonLineDetector::check_y_starts(const std::vector<float> &y_starts)
+bool HorizonLineDetectorFive::check_y_starts(const std::vector<float> &y_starts)
 {
     if (y_starts.size()<2) return false;
     constraining_y_start = (abs(y_starts[y_starts.size()-1]- y_starts[y_starts.size()-2]) < 5 );
@@ -184,14 +190,15 @@ bool HorizonLineDetector::check_y_starts(const std::vector<float> &y_starts)
     return constraining_y_start;
 }
 
-bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask)
+bool HorizonLineDetectorFive::DynamicProgramming(const cv::Mat &frame,const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, OTSU* otsu )
 {
     int i = 0;
+    frames = frames + 1;
     int horizon_not_found=0;
     std::vector<float> y_starts; //Vector where we store the y location of the initial frames before we constraint the y start
 
     /// Detect HL
-    detect_image(frame);
+    detect_image(frame, otsu);
 
     /// Create output mask
     cv::Mat output_mask = cv::Mat( current_edges.rows, current_edges.cols - 1, CV_8U, cv::Scalar(0));
@@ -219,7 +226,7 @@ bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::str
         if (constraining_y_start)
         {
             y_start = horizon[horizon.size()-2].y;
-            std::cout << "ystart= " << y_start << std::endl;
+//            std::cout << "ystart= " << y_start << std::endl;
         }
         else
         {
@@ -247,13 +254,15 @@ bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::str
 //    cv::imshow("pred", current_draw);
 //    cv::waitKey(0);
     /// Write Edge image
+//    cv::resize(current_edges, current_edges, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
 //    cv::imwrite(video_file_out_edge,current_edges);
     /// Write output binary mask
     //cv::imwrite(video_file_out_mask,output_mask);
+    otsu->clearHLPoints();
     return true;
 }
 
-void HorizonLineDetector::draw_horizon()
+void HorizonLineDetectorFive::draw_horizon()
 {
     const cv::Scalar s1(0,0,255);
     cv::cvtColor(current_frame,current_draw, cv::COLOR_GRAY2RGB);
@@ -266,15 +275,16 @@ void HorizonLineDetector::draw_horizon()
 }
 
 
-void HorizonLineDetector::save_draw_frame(const std::string file_name)
+void HorizonLineDetectorFive::save_draw_frame(const std::string file_name)
 {
     /// resize output binary mask
     cv::resize(current_draw, current_draw, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
     cv::imwrite(file_name,current_draw);
 
+
 }
 
-void HorizonLineDetector::reset_dp()
+void HorizonLineDetectorFive::reset_dp()
 {
     delete_nodes();
     first_node->cost=0;
@@ -282,13 +292,18 @@ void HorizonLineDetector::reset_dp()
     last_node->cost=INFINITY;
 }
 
-void HorizonLineDetector::delete_nodes()
+void HorizonLineDetectorFive::delete_nodes()
 {
     last_node->prev=nullptr;
     ntree.clear();
 }
 
-double HorizonLineDetector::confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img ) {
+//void HorizonLineDetectorFive::averageHorizon() {
+//
+//
+//}
+
+double HorizonLineDetectorFive::confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img ) {
     int num_pts = static_cast<int> (points.size()*0.1);
 
     int search_radius = 15;
@@ -301,7 +316,7 @@ double HorizonLineDetector::confidenceEstimate( std::vector<cv::Point> points, c
     double horizon_count = 0;
 
 
-    for ( int i = 1; i < points.size(); i = i + 25 ){
+    for ( int i = 1; i < points.size(); i = i + 5 ){
 
         int x = points[i].x;
         int y = points[i].y;

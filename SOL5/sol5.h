@@ -1,7 +1,6 @@
 //
-// Created by kyle on 5/08/19.
+// Created by kyle on 5/09/19.
 //
-
 #include <opencv2/opencv.hpp>
 #include "opencv2/core.hpp"
 #include "opencv2/ml.hpp"
@@ -15,24 +14,26 @@
 #include <map>
 #include <list>
 #include <math.h>
-#ifndef EGH400_1_2_DP_H
-#define EGH400_1_2_DP_H
-class Node
+#ifndef NEW400FINAL_SOL5_H
+#define NEW400FINAL_SOL5_H
+
+
+class NodeFive
 {
 public:
-    Node(){}
-    Node(std::shared_ptr<Node> p,int x_,int y_){prev=p;x=x_;y=y_;lost=0;}
-    Node(Node &n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev;}
-    std::shared_ptr<Node> prev;   //Previous nodes
+    NodeFive(){}
+    NodeFive(std::shared_ptr<NodeFive> p,int x_,int y_){prev=p;x=x_;y=y_;lost=0;}
+    NodeFive(NodeFive &n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev;}
+    std::shared_ptr<NodeFive> prev;   //Previous nodes
     int cost;                     //Total cost until now
     int lost;                     //Number of steps taken without a clear path
     int x,y;
-    Node& operator=(const Node &n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev; return *this;}
-    Node& operator=(Node &&n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev;n1.prev=nullptr;return *this;}
+    NodeFive& operator=(const NodeFive &n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev; return *this;}
+    NodeFive& operator=(NodeFive &&n1){x=n1.x;y=n1.y;cost=n1.cost;lost=n1.lost;prev=n1.prev;n1.prev=nullptr;return *this;}
 
 };
 
-class HorizonLineDetector
+class HorizonLineDetectorFive
 {
 private:
     int max_lost_steps = 10;
@@ -45,23 +46,30 @@ private:
     int canny_param = 30;
     double confidence_in_estimate = 0;
 
+
+    const int STRAIGHT_PEN = 200000;
+
     void compute_edges();
     void delete_nodes();
-    bool compute_cheapest_path( );
-    bool dp(std::shared_ptr<Node> n);
+    bool compute_cheapest_path( OTSU* otsu);
+    bool dp(std::shared_ptr<NodeFive> n, OTSU* otsu);
     void reset_dp();
-    void add_node_to_horizon(std::shared_ptr<Node> n);
+    void add_node_to_horizon(std::shared_ptr<NodeFive> n);
     bool check_y_starts(const std::vector<float> &y_starts);
 
     cv::Mat current_frame,current_edges, current_edges_list,current_draw;
-    std::shared_ptr<Node> first_node, last_node;
+    std::shared_ptr<NodeFive> first_node, last_node;
     cv::Mat_<int> visited;
-    std::vector<cv::Point2i> horizon;
-    std::multimap<int,std::shared_ptr<Node>> ntree;
+
+    std::multimap<int,std::shared_ptr<NodeFive>> ntree;
 
 public:
-    HorizonLineDetector();
-    ~HorizonLineDetector(){}
+
+    int frames = 0;
+    std::vector<cv::Point2i> horizon;
+    std::vector<cv::Point2i> previous_horizon;
+    HorizonLineDetectorFive();
+    ~HorizonLineDetectorFive(){}
 
 
     void set_max_lost_steps(const int max_lost){max_lost_steps=max_lost;}
@@ -73,10 +81,13 @@ public:
     int get_max_search_steps(){return max_lost_steps;}
     void set_max_search_steps(const int mss){max_lost_steps=mss;}
     //Detect horizon line in image
-    void detect_image(const cv::Mat &frame);
+    void detect_image(const cv::Mat &frame, OTSU* otsu);
     //Detect horizon file in video
-    bool DynamicProgramming(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask);
+    bool DynamicProgramming(const cv::Mat &frame, const std::string video_file_out, const std::string video_file_out_edge, const std::string video_file_out_mask, OTSU* otsu);
     void save_draw_frame(const std::string file_name="draw.jpg");
     double confidenceEstimate( std::vector<cv::Point> points, const cv::Mat &img );
+
+
+
 };
-#endif //EGH400_1_2_DP_H
+#endif //NEW400FINAL_SOL5_H

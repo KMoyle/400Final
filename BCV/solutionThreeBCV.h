@@ -1,16 +1,16 @@
 //
-// Created by kyle on 26/04/19.
+// Created by kyle on 15/05/19.
 //
 
-#ifndef EGH400_1_2_SOLUTIONTHREEBCV_H
-#define EGH400_1_2_SOLUTIONTHREEBCV_H
-
+#ifndef NEW400FINAL_SOLUTIONTHREEBCV_H
+#define NEW400FINAL_SOLUTIONTHREEBCV_H
 #include <stdlib.h>
 #include <string>
 
 #include <opencv2/opencv.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/highgui.hpp"
+
 
 class BetweenClassVariance
 {
@@ -32,6 +32,5 @@ public:
 
     void fineHLDetection( cv::Mat& image, cv::Mat& RGB, std::vector<double> rho_theta );
 
-    double confidenceEstimate( std::vector<cv::Point> points, cv::Mat &img );
 };
-#endif //EGH400_1_2_SOLUTIONTHREEBCV_H
+#endif //NEW400FINAL_SOLUTIONTHREEBCV_H
