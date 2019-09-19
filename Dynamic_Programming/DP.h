@@ -38,7 +38,7 @@ private:
     int max_lost_steps = 10;
     int lost_step_cost = 8;
     int max_cost = 2;
-    bool constraining_y_start = true;
+    bool constraining_y_start = false;
     float y_start = 0;
     float y_variation = 5;
     int reset_y_constraint_condition = 1;

@@ -63,8 +63,8 @@ void MaximiseBusyness::prelimHL(cv::Mat &image, cv::Mat &RGB ){
     cv::Mat mag_im;
     cv::Sobel( image, mag_im, CV_8U, 0,2,3,2);
 //    cv::Scharr( image, mag_im, CV_8U, 0,1,1);
-    cv::imshow( "Mag Image", mag_im );
-    cv::waitKey(0);
+//    cv::imshow( "Mag Image", mag_im );
+//    cv::waitKey(0);
     setMagImg( mag_im);
     // Iterate over rows && columns saving horizon line points where threshold is max
 

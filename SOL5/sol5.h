@@ -37,9 +37,9 @@ class HorizonLineDetectorFive
 {
 private:
     int max_lost_steps = 10;
-    int lost_step_cost = 8;
+    int lost_step_cost = 20;
     int max_cost = 2;
-    bool constraining_y_start = true;
+    bool constraining_y_start = false;
     float y_start = 0;
     float y_variation = 5;
     int reset_y_constraint_condition = 1;
@@ -47,7 +47,7 @@ private:
     double confidence_in_estimate = 0;
 
 
-    const int STRAIGHT_PEN = 200000;
+    const int STRAIGHT_PEN = 200;
 
     void compute_edges();
     void delete_nodes();

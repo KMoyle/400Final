@@ -90,8 +90,12 @@ bool HorizonLineDetectorFive::dp(std::shared_ptr<NodeFive> n, OTSU* otsu)
                     auto n1=std::make_shared<NodeFive>(n,n->x+i,n->y+j);
                     n1->lost=1+n->lost;
                     n1->cost= lost_step_cost + n->cost;
-                    ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost*abs(n->y - n1->y)*STRAIGHT_PEN + STRAIGHT_PEN*otsu->getCostOTSU(n1->x, n1->y),n1));
-                }
+                    if ( abs(n->y - n1->y) >= 1) {
+
+                        ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost*abs(n->y - n1->y)*STRAIGHT_PEN + STRAIGHT_PEN*otsu->getCostOTSU(n1->x, n1->y) ,n1)); //Penalising non straight horizons
+                    } else {
+                        ntree.insert(std::pair<int,std::shared_ptr<NodeFive> >(n1->cost + STRAIGHT_PEN*otsu->getCostOTSU( n1->x, n1->y),n1));
+                    }                }
             }
         }
     }
@@ -134,7 +138,7 @@ bool HorizonLineDetectorFive::compute_cheapest_path(OTSU* otsu)
             cost = lost_step_cost;
         }
         n->cost = cost;
-        ntree.insert(std::pair<int,std::shared_ptr<NodeFive>>(n->cost+top+pow(i,3),n));
+        ntree.insert(std::pair<int,std::shared_ptr<NodeFive>>(n->cost+top+pow(i,2),n));
 
     }
     std::map<int,std::shared_ptr<NodeFive>>::iterator curr_node;//Iterator
@@ -216,8 +220,7 @@ bool HorizonLineDetectorFive::DynamicProgramming(const cv::Mat &frame,const std:
                 output_mask.at<uint8_t >(j , horizon[i].x) = 255;
             }
         }
-        /// resize output binary mask
-        cv::resize(output_mask, output_mask, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
+
         /// Confidence estimate of HL
         confidence_in_estimate = confidenceEstimate(horizon, current_frame);
 //        std::cout << "confidence= " << confidence_in_estimate<< std::endl;
@@ -254,10 +257,11 @@ bool HorizonLineDetectorFive::DynamicProgramming(const cv::Mat &frame,const std:
 //    cv::imshow("pred", current_draw);
 //    cv::waitKey(0);
     /// Write Edge image
-//    cv::resize(current_edges, current_edges, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
-//    cv::imwrite(video_file_out_edge,current_edges);
+    cv::resize(current_edges, current_edges, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
+    cv::imwrite(video_file_out_edge,current_edges);
     /// Write output binary mask
-    //cv::imwrite(video_file_out_mask,output_mask);
+    cv::resize(output_mask, output_mask, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
+    cv::imwrite(video_file_out_mask,output_mask);
     otsu->clearHLPoints();
     return true;
 }

@@ -240,16 +240,17 @@ bool HorizonLineDetector::DynamicProgramming(const cv::Mat &frame,const std::str
     }
 
     /// Draw HL
-    draw_horizon();
-    /// Save prediction frame
-    save_draw_frame(video_file_out);
+//    draw_horizon();
+   // Save prediction frame
+//    save_draw_frame(video_file_out);
     /// Show prediction frame
 //    cv::imshow("pred", current_draw);
 //    cv::waitKey(0);
     /// Write Edge image
 //    cv::imwrite(video_file_out_edge,current_edges);
     /// Write output binary mask
-    //cv::imwrite(video_file_out_mask,output_mask);
+//    cv::resize(output_mask, output_mask, cv::Size(1024,768), 0, 0, cv::INTER_LINEAR);
+//    cv::imwrite(video_file_out_mask,output_mask);
     return true;
 }
 

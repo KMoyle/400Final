@@ -56,10 +56,6 @@ opencv2/imgproc.hpp
 opencv2/highgui.hpp
 /home/kyle/Desktop/HLD/new400Final/Maximise_Busyness/opencv2/highgui.hpp
 
-/home/kyle/Desktop/HLD/new400Final/OTSU/solutionOneOTSU.cpp
-solutionOneOTSU.h
-/home/kyle/Desktop/HLD/new400Final/OTSU/solutionOneOTSU.h
-
 /home/kyle/Desktop/HLD/new400Final/OTSU/solutionOneOTSU.h
 stdlib.h
 -
@@ -71,6 +67,20 @@ opencv2/imgproc/imgproc.hpp
 /home/kyle/Desktop/HLD/new400Final/OTSU/opencv2/imgproc/imgproc.hpp
 opencv2/highgui/highgui.hpp
 /home/kyle/Desktop/HLD/new400Final/OTSU/opencv2/highgui/highgui.hpp
+
+/home/kyle/Desktop/HLD/new400Final/SOL5/sol5.cpp
+sol5.h
+/home/kyle/Desktop/HLD/new400Final/SOL5/sol5.h
+fstream
+-
+opencv2/imgproc.hpp
+/home/kyle/Desktop/HLD/new400Final/SOL5/opencv2/imgproc.hpp
+opencv2/highgui.hpp
+/home/kyle/Desktop/HLD/new400Final/SOL5/opencv2/highgui.hpp
+opencv2/video.hpp
+/home/kyle/Desktop/HLD/new400Final/SOL5/opencv2/video.hpp
+opencv2/videoio.hpp
+/home/kyle/Desktop/HLD/new400Final/SOL5/opencv2/videoio.hpp
 
 /home/kyle/Desktop/HLD/new400Final/SOL5/sol5.h
 opencv2/opencv.hpp

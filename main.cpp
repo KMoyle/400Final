@@ -20,16 +20,16 @@ int main(int argc, char** argv )
     //Processing Mats
     cv::Mat image, im_Gray;
 
-    int k = 250;
+    int k = 10;
     int SOL  = 5;
 
-    int p = 9604;
+    int p = 1;
     HorizonLineDetector hld;
     HorizonLineDetectorFive Sol_5;
 
 
     auto total_time = 0;
-    bool run_all = false;
+    bool run_all = true;
     for (int i = p ; i < k +p; i++) {
 
         std::string image_url;
@@ -81,7 +81,7 @@ int main(int argc, char** argv )
 //        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20180906-02_08_24/camera_images/4/";
 
 //        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20171205-19_13_47/camera_images/1/9604.ppm";
-        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20171205-19_13_47/camera_images/1/";
+//        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20171205-19_13_47/camera_images/1/";
 //        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20171205-19_13_47/camera_images/2/19215.ppm";
 //        image_url  =  "/home/kyle/mnt/daa/detectdata/datasets/aslhost-20171205-19_13_47/camera_images/2/";
 
@@ -90,7 +90,7 @@ int main(int argc, char** argv )
 
 
 
-        image_url = image_url + std::to_string(i) + std::string(".ppm");
+//        image_url = image_url + std::to_string(i) + std::string(".ppm");
 
         image = cv::imread(image_url, 1);
 
@@ -119,17 +119,24 @@ int main(int argc, char** argv )
                      * SOLUTION ONE OTSU
                      */
                     auto start_otsu = std::chrono::steady_clock::now();
+                    cv::resize(im_Gray, im_Gray, cv::Size(image.cols * 0.2, image.rows * 0.2), 0, 0,
+                               cv::INTER_LINEAR);
+                    cv::resize(otsu_test_img, otsu_test_img, cv::Size(image.cols * 0.2, image.rows * 0.2), 0, 0,
+                               cv::INTER_LINEAR);
                     std::string pred_url_otsu = "/home/kyle/Desktop/HLD/predictions/OTSU/play/img_otsu";
                     std::string hld_pred_url = pred_url_otsu + std::to_string(i) + std::string("_pred.png");
 
                     OTSU otsu(im_Gray, otsu_test_img, "linear");
 
-                    cv::imwrite(hld_pred_url, otsu_test_img);
-//                    cv::imshow("pred", image);
+//                    cv::imwrite(hld_pred_url, otsu_test_img);
+                    cv::resize(im_Gray, im_Gray, cv::Size(1024, 768), 0, 0);
+                    cv::imwrite(hld_pred_url, im_Gray);
+//                    cv::imshow("pred", otsu_test_img);
 //                    cv::waitKey(0);
                     auto end_otsu = std::chrono::steady_clock::now();
                     auto diff_otsu = end_otsu - start_otsu;
 
+                    total_time = total_time + std::chrono::duration<double, std::milli>(diff_otsu).count();
                     std::cout << std::chrono::duration<double, std::milli>(diff_otsu).count() << " ms" << std::endl;
 
                     break;
@@ -148,7 +155,7 @@ int main(int argc, char** argv )
                     auto diff_MB = end_MB - start_MB;
 
                     total_time = std::chrono::duration<double, std::milli>(diff_MB).count() + total_time;
-                    cv::imwrite(hld_pred_url, MB_test_img);
+                    cv::imwrite(hld_pred_url, im_Gray);
                     std::cout << std::chrono::duration<double, std::milli>(diff_MB).count() << " ms" << std::endl;
                     break;
                 }
@@ -160,16 +167,16 @@ int main(int argc, char** argv )
                     std::string pred_url_BVC = "/home/kyle/Desktop/HLD/predictions/BVC/play/img_";
                     std::string hld_pred_url = pred_url_BVC + std::to_string(i) + std::string("_pred.png");
                     auto start_BVC= std::chrono::steady_clock::now();
-                    cv::Rect region_of_interest = cv::Rect(0, 400, im_Gray.cols - 1, (im_Gray.rows - 1) - 400);
-                    cv::Mat image_roi = im_Gray(region_of_interest);
-                    cv::Mat image_roi_test = BVC_test_img(region_of_interest);
-                    BetweenClassVariance BCV(image_roi, image_roi_test);
+//                    cv::Rect region_of_interest = cv::Rect(0, 400, im_Gray.cols - 1, (im_Gray.rows - 1) - 400);
+//                    cv::Mat image_roi = im_Gray(region_of_interest);
+//                    cv::Mat image_roi_test = BVC_test_img(region_of_interest);
+                    BetweenClassVariance BCV(im_Gray, BVC_test_img);
 
                     auto end_BVC = std::chrono::steady_clock::now();
                     auto diff_BVC = end_BVC - start_BVC;
                     total_time = std::chrono::duration<double, std::milli>(diff_BVC).count() + total_time;
 
-                    cv::imwrite(hld_pred_url, image_roi_test);
+                    cv::imwrite(hld_pred_url, im_Gray);
                     break;
                 }
                 case 4: {
@@ -188,7 +195,7 @@ int main(int argc, char** argv )
                     auto start = std::chrono::steady_clock::now();
                     std::cout << "num= " << i << std::endl;
                     if (is_run) {
-                        hld.set_canny_param(12);
+                        hld.set_canny_param(11);
                         hld.set_max_search_steps(4);
                         hld.DynamicProgramming(DP_test_img, file_path_out, file_path_out_edge, file_path_out_mask);
                     }
@@ -241,7 +248,7 @@ int main(int argc, char** argv )
                     std::cout << "num= " << i << std::endl;
                     if (is_run) {
                         Sol_5.set_canny_param(10);
-                        Sol_5.set_max_search_steps(9);
+                        Sol_5.set_max_search_steps(5);
                         Sol_5.DynamicProgramming(DP_test_img, file_path_out, file_path_out_edge, file_path_out_mask, ptr_otsu);
                     }
                     auto end = std::chrono::steady_clock::now();
@@ -261,7 +268,7 @@ int main(int argc, char** argv )
 //    imshow( "BGR Image", image );
 
 
-    cv::waitKey(0);
+//    cv::waitKey(0);
 
     return 0;
 }

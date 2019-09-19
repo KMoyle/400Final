@@ -142,7 +142,7 @@ void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string soluti
         std::vector<cv::Point2i> fineHL;
 
         int x1, y1, x2, y2; //points for HL
-        int mag = image.cols/2*1.25;
+        int mag = image.cols/2;
         /**
         * setting first and last point for HL
         */
@@ -160,11 +160,11 @@ void OTSU::performOTSUThreshold(cv::Mat &image, cv::Mat &RGB, std::string soluti
         float increament = delta_t/image.cols;
 
 //        // output binary mask
-//        for (int ii = 0; ii < image.cols - 1; ii++){
-//            for (int jj = 0; jj < round(y1 + ii*increament); jj++) {
-//                bin_mask.at<uchar>(jj,ii) = 255;
-//            }
-//        }
+        for (int ii = 0; ii < image.cols - 1; ii++){
+            for (int jj = 0; jj < round(y1 + ii*increament); jj++) {
+                bin_mask.at<uchar>(jj,ii) = 255;
+            }
+        }
         // getting N COARSE POINTS
         for (int ii = 0; ii < image.cols - 1; ii += N ){
 
